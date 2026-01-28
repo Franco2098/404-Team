@@ -1,12 +1,170 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
-    
+    <link rel="stylesheet" href="styles2.css">
+    <title>Dashboard - Horarios Semanales</title>
 </head>
 <body>
-    <p>Welcome to the Home Page!</p>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo">📅 MySchedule</div>
+        <div class="user-info">
+            <div class="avatar">JD</div>
+            <span class="user-name">Juan Pérez</span>
+        </div>
+    </header>
+
+    <!-- NAV -->
+    <nav class="nav-container">
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <span class="nav-icon">🗺️</span>
+                    Mapa
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link active">
+                    <span class="nav-icon">🕐</span>
+                    Horarios
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="Calendario.html" class="nav-link">
+                    <span class="nav-icon">📅</span>
+                    Calendario
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <span class="nav-icon">🏆</span>
+                    Recompensas
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="main-content">
+        <h2 class="section-title">Semana Laboral</h2>
+
+        <div class="schedule-container">
+
+            <!-- LUNES -->
+            <div class="day-card">
+                <div class="day-header">
+                    <span class="day-name">Lunes</span>
+                    <span class="day-date">15 Enero</span>
+                </div>
+                <div class="schedule-list">
+                    <div class="schedule-item">
+                        <span class="time">09:00 AM</span>
+                        <span class="activity">Reunión de equipo</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time">11:30 AM</span>
+                        <span class="activity">Revisión de proyecto</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time">03:00 PM</span>
+                        <span class="activity">Presentación cliente</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MARTES -->
+            <div class="day-card">
+                <div class="day-header">
+                    <span class="day-name">Martes</span>
+                    <span class="day-date">16 Enero</span>
+                </div>
+                <div class="schedule-list">
+                    <div class="schedule-item">
+                        <span class="time">10:00 AM</span>
+                        <span class="activity">Workshop desarrollo</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time">02:00 PM</span>
+                        <span class="activity">Sesión de brainstorming</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MIÉRCOLES -->
+            <div class="day-card">
+                <div class="day-header">
+                    <span class="day-name">Miércoles</span>
+                    <span class="day-date">17 Enero</span>
+                </div>
+                <div class="schedule-list">
+                    <div class="schedule-item">
+                        <span class="time">09:30 AM</span>
+                        <span class="activity">Llamada con socios</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time">12:00 PM</span>
+                        <span class="activity">Almuerzo networking</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time">04:00 PM</span>
+                        <span class="activity">Revisión semanal</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time">05:30 PM</span>
+                        <span class="activity">Planificación sprint</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JUEVES -->
+            <div class="day-card">
+                <div class="day-header">
+                    <span class="day-name">Jueves</span>
+                    <span class="day-date">18 Enero</span>
+                </div>
+                <div class="schedule-list">
+                    <div class="schedule-item">
+                        <span class="time">09:00 AM</span>
+                        <span class="activity">Soporte técnico</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time">11:00 AM</span>
+                        <span class="activity">QA y Testing</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time">02:30 PM</span>
+                        <span class="activity">Documentación</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIERNES -->
+            <div class="day-card">
+                <div class="day-header">
+                    <span class="day-name">Viernes</span>
+                    <span class="day-date">19 Enero</span>
+                </div>
+                <div class="schedule-list">
+                    <div class="schedule-item">
+                        <span class="time">10:00 AM</span>
+                        <span class="activity">Retrospectiva</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time">01:00 PM</span>
+                        <span class="activity">Cierre de tickets</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time">04:00 PM</span>
+                        <span class="activity">Happy Hour / Team Building</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
 </body>
 </html>

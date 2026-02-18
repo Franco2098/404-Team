@@ -216,9 +216,11 @@ body {
     border-radius: 12px;
     display: grid;
     grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: 90px; /* cada fila tiene altura fija */
     gap: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
+
 
 .calendar-header {
     text-align: center;
@@ -258,4 +260,72 @@ body {
     margin-top: 6px;
     font-size: 12px;
     font-weight: 500;
+}
+
+.year-calendar {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.month-mini h4 {
+    text-align: center;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.calendar-container.mini {
+    padding: 8px;
+    gap: 4px;
+}
+
+.calendar-day.mini-day {
+    min-height: 30px;
+    font-size: 10px;
+    padding: 4px;
+}
+
+@media (max-width: 1024px) {
+    .year-calendar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .year-calendar {
+        grid-template-columns: 1fr;
+    }
+}
+.map-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.rewards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.reward-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.reward-card h3 {
+    margin-bottom: 10px;
+}
+
+.reward-card button {
+    margin-top: 10px;
+}
+.dark-btn {
+    margin-left: 15px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
 }

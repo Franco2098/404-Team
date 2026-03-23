@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/styles2.css">
+    <link rel="stylesheet" href="styles2.css">
     <title>Dashboard - Horarios Semanales</title>
 </head>
 <body>
@@ -11,35 +11,37 @@
     <!-- HEADER -->
     <header class="header">
         <div class="logo">📅 MySchedule</div>
-        <div class="user-info">
-            <div class="avatar">JD</div>
-            <span class="user-name">Juan Pérez</span>
+        <div class="user-info" id="userMenuToggle">
+            <div class="avatar">Ad</div>
+            <span class="user-name">Admin</span>
+            
+            <div class="user-dropdown" id="userDropdown">
+                <a href="#" class="dropdown-item">Apartado 1</a>
+                <a href="#" class="dropdown-item">Apartado 2</a>
+                <a href="#" class="dropdown-item">Apartado 3</a>
+                <a href="#" class="dropdown-item">Apartado 4</a>
+             </div>
         </div>
+        
     </header>
 
     <!-- NAV -->
     <nav class="nav-container">
         <ul class="nav-menu">
             <li class="nav-item">
-                <a href="#" class="nav-link">
-                    <span class="nav-icon">🗺️</span>
-                    Mapa
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link active">
+                <a href="home.html" class="nav-link active">
                     <span class="nav-icon">🕐</span>
                     Horarios
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="Calendario.html" class="nav-link">
                     <span class="nav-icon">📅</span>
                     Calendario
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="recompensas.html" class="nav-link">
                     <span class="nav-icon">🏆</span>
                     Recompensas
                 </a>
@@ -165,6 +167,20 @@
 
         </div>
     </main>
+
+    <script>
+    const toggle = document.getElementById("userMenuToggle");
+    const dropdown = document.getElementById("userDropdown");
+
+    toggle.addEventListener("click", function (e) {
+        e.stopPropagation();
+        dropdown.classList.toggle("show");
+    });
+
+    document.addEventListener("click", function () {
+        dropdown.classList.remove("show");
+    });
+</script>
 
 </body>
 </html>

@@ -9,7 +9,7 @@
 <body>
     <h2>Iniciar sesión</h2>
 
-   <form id="loginForm">
+    <form id="loginForm">
         <label for="usuario">Usuario:</label><br>
         <input type="text" id="usuario" placeholder="Usuario"><br><br>
 
@@ -21,26 +21,54 @@
         
     </form>
 
+    <!-- Alert modal shown when validation fails -->
+    <div id="alertModal" class="alert-modal" role="alert" aria-live="assertive">
+        <div class="alert-message">Por favor completa todos los campos</div>
+        <button id="alertOk" class="alert-action">Aceptar</button>
+    </div>
+
     <script>
         document.getElementById("loginForm").addEventListener("submit", function(e){
             e.preventDefault();
 
-            let user = document.getElementById("usuario").value.trim();
-            let pass = document.getElementById("password").value.trim();
+            const userEl = document.getElementById("usuario");
+            const passEl = document.getElementById("password");
+            const user = (userEl.value || "").trim();
+            const pass = (passEl.value || "").trim();
 
-            // Validar que los campos no estén vacíos
-            if(user === "" || pass === "") {
-                alert("Por favor completa todos los campos");
+            // If either field is empty, show styled alert like the screenshot
+            if (!user || !pass) {
+                showAlert();
                 return;
             }
 
             // usuario administrador
             if(user === "admin" && pass === "admin123"){
+                try { localStorage.removeItem('user'); sessionStorage.removeItem('user'); } catch (err) {}
                 window.location.href = "home_admin.html";
             }
             else{
+                try { localStorage.setItem('user', user); } catch (err) {}
                 window.location.href = "home.html";
             }
+        });
+
+        const alertModal = document.getElementById('alertModal');
+        const alertOk = document.getElementById('alertOk');
+
+        function showAlert(){
+            alertModal.classList.add('show');
+            // optionally auto-focus the button for keyboard users
+            alertOk.focus();
+        }
+
+        alertOk.addEventListener('click', function(){
+            alertModal.classList.remove('show');
+        });
+
+        // close when pressing Escape
+        document.addEventListener('keydown', function(e){
+            if(e.key === 'Escape') alertModal.classList.remove('show');
         });
     </script>
 </body>

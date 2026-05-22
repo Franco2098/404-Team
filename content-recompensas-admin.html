@@ -1,0 +1,118 @@
+<h2 class="section-title">Sistema de Recompensas</h2>
+
+<div class="rewards-container">
+
+    <div class="reward-card">
+        <h3>🎯 Puntualidad</h3>
+        <p>+10 puntos por cada semana sin retrasos.</p>
+        <div class="reward-actions">
+            <button class="btn-edit"> Editar</button>
+            <button class="btn-delete"> Eliminar</button>
+        </div>
+    </div>
+
+    <div class="reward-card">
+        <h3>🏅 Mejor empleado del mes</h3>
+        <p>Reconocimiento y bonus especial.</p>
+        <div class="reward-actions">
+            <button class="btn-edit"> Editar</button>
+            <button class="btn-delete"> Eliminar</button>
+        </div>
+    </div>
+
+    <div class="reward-card">
+        <h3>🎁 Bonus anual</h3>
+        <p>Acumula 500 puntos para obtener premio.</p>
+        <div class="reward-actions">
+            <button class="btn-edit"> Editar</button>
+            <button class="btn-delete"> Eliminar</button>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .reward-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        justify-content: center;
+    }
+
+    .btn-edit, .btn-delete {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-edit {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .btn-edit:hover {
+        background-color: #45a049;
+        transform: scale(1.05);
+    }
+
+    .btn-delete {
+        background-color: #f44336;
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background-color: #da190b;
+        transform: scale(1.05);
+    }
+</style>
+
+<script>
+    // Funcionalidad para editar recompensas
+    document.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const card = this.closest('.reward-card');
+            const title = card.querySelector('h3').textContent;
+            const description = card.querySelector('p').textContent;
+            
+            const newTitle = prompt('Editar título:', title);
+            if (newTitle !== null) {
+                card.querySelector('h3').textContent = newTitle;
+            }
+            
+            const newDesc = prompt('Editar descripción:', description);
+            if (newDesc !== null) {
+                card.querySelector('p').textContent = newDesc;
+            }
+            
+            alert('Recompensa actualizada correctamente');
+        });
+    });
+
+    // Funcionalidad para eliminar recompensas
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (confirm('¿Seguro que deseas eliminar esta recompensa?')) {
+                this.closest('.reward-card').style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => {
+                    this.closest('.reward-card').remove();
+                }, 300);
+                alert('Recompensa eliminada');
+            }
+        });
+    });
+
+    // Animación de eliminación
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+</script>

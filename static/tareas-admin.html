@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles2.css">
+    <title>Admin - Tareas</title>
+</head>
+<body>
+    <style>
+    .admin-toolbar .form-group label { color: #fff; }
+</style>
+<header class="header">
+    <div class="logo">📅 MySchedule</div>
+    <div class="user-info" id="userMenuToggle">
+        <div class="avatar">Ad</div>
+        <div class="user-name-wrap">
+            <span class="user-name">Admin</span>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="#" id="btnLogout" class="dropdown-item">
+                    <span class="item-icon">↪</span>
+                    <span class="item-text">Cerrar sesión</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<nav class="nav-container">
+    <ul class="nav-menu">
+        <li class="nav-item"><a href="home_admin.html"       class="nav-link"><span class="nav-icon">🕐</span>Horarios</a></li>
+        <li class="nav-item"><a href="tareas-admin.html"     class="nav-link active"><span class="nav-icon">📋</span>Tareas</a></li>
+        <li class="nav-item"><a href="Calendario-admin.html" class="nav-link"><span class="nav-icon">📅</span>Calendario</a></li>
+        <li class="nav-item"><a href="recompensa-admin.html" class="nav-link"><span class="nav-icon">🏆</span>Recompensas</a></li>
+    </ul>
+</nav>
+
+<main class="main-content">
+    <h2 class="section-title">Tareas – Panel Admin</h2>
+
+    <div class="admin-toolbar">
+    <div class="form-group" style="margin-bottom:0">
+        <label>Fecha</label>
+        <input type="date" id="inFecha" style="min-width:180px">
+    </div>
+    <button class="btn-primary" id="btnCargar" style="align-self:flex-end">Cargar empleados</button>
+    <button class="btn-primary" id="btnNueva" disabled style="align-self:flex-end">+ Nueva tarea</button>
+</div>
+
+    <div id="tareasContainer"></div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h3 id="modalTitle">Nueva tarea</h3>
+        <div class="form-group">
+            <label>Empleado</label>
+            <select id="inUsuario"></select>
+        </div>
+        <div class="form-group">
+            <label>Hora</label>
+            <input type="time" id="inHora">
+        </div>
+        <div class="form-group">
+            <label>Descripción</label>
+            <input type="text" id="inDesc" placeholder="Descripción de la tarea">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" id="btnCancelar">Cancelar</button>
+            <button class="btn-save"   id="btnGuardar">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Dropdown / logout ──────────────────────────────────
+const toggle   = document.getElementById("userMenuToggle");
+const dropdown = document.getElementById("userDropdown");
+toggle.addEventListener("click", e => { e.stopPropagation(); dropdown.classList.toggle("show"); });
+document.addEventListener("click", () => dropdown.classList.remove("show"));
+document.getElementById('btnLogout').addEventListener('click', async e => {
+    e.preventDefault();
+    await fetch('/api/logout', { method:'POST', credentials:'include' });
+    sessionStorage.clear();
+    window.location.href = 'equipo404.html';
+});
+
+function toast(msg, ms=2500) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), ms);
+}
+
+// ── Estado ─────────────────────────────────────────────
+let fechaActual   = null;
+let usuariosFecha = [];  // [{id_usuario, nombre}]
+let editId        = null;
+
+// ── Cargar empleados del día ───────────────────────────
+document.getElementById('btnCargar').addEventListener('click', async () => {
+    const fecha = document.getElementById('inFecha').value;
+    if (!fecha) { toast('Selecciona una fecha'); return; }
+
+    fechaActual = fecha;
+
+    const res     = await fetch(`/api/horarios/usuarios-por-fecha?fecha=${fecha}`, { credentials:'include' });
+    usuariosFecha = await res.json();
+
+    if (!usuariosFecha.length) {
+        document.getElementById('tareasContainer').innerHTML =
+            '<p style="color:white;padding:12px">No hay empleados con horario ese día.</p>';
+        document.getElementById('btnNueva').disabled = true;
+        return;
+    }
+
+    document.getElementById('btnNueva').disabled = false;
+    cargarTareas();
+});
+
+// ── Cargar y renderizar tareas ─────────────────────────
+async function cargarTareas() {
+    const c   = document.getElementById('tareasContainer');
+    const res = await fetch(`/api/tareas/por-fecha?fecha=${fechaActual}`, { credentials:'include' });
+    const todas = await res.json();
+
+    // Agrupar por usuario
+    c.innerHTML = usuariosFecha.map(u => {
+        const tareas = todas.filter(t => t.id_usuario === u.id_usuario);
+        const filasHTML = tareas.length
+            ? tareas.map(t => `
+                <div class="tarea-row">
+                    <span class="tarea-hora">${t.hora}</span>
+                    <span class="tarea-desc">${t.descripcion}</span>
+                    <button class="btn-edit"   onclick='abrirEditar(${JSON.stringify(t)})'>Editar</button>
+                    <button class="btn-delete" onclick="eliminarTarea(${t.id_tarea})">Eliminar</button>
+                </div>`).join('')
+            : '<p class="empty-msg">Sin tareas asignadas</p>';
+
+        return `
+            <div class="usuario-section">
+                <h3>👤 ${u.nombre}</h3>
+                ${filasHTML}
+            </div>`;
+    }).join('');
+}
+
+// ── Modal nueva tarea ──────────────────────────────────
+document.getElementById('btnNueva').addEventListener('click', () => {
+    editId = null;
+    document.getElementById('modalTitle').textContent = 'Nueva tarea';
+    document.getElementById('inHora').value = '';
+    document.getElementById('inDesc').value = '';
+
+    const sel = document.getElementById('inUsuario');
+    sel.innerHTML = usuariosFecha.map(u =>
+        `<option value="${u.id_usuario}">${u.nombre}</option>`).join('');
+    sel.disabled = false;
+
+    document.getElementById('modalOverlay').classList.add('show');
+});
+
+// ── Modal editar tarea ─────────────────────────────────
+window.abrirEditar = t => {
+    editId = t.id_tarea;
+    document.getElementById('modalTitle').textContent = 'Editar tarea';
+    document.getElementById('inHora').value = t.hora;
+    document.getElementById('inDesc').value = t.descripcion;
+
+    const sel = document.getElementById('inUsuario');
+    sel.innerHTML = `<option value="${t.id_usuario}">${t.nombre}</option>`;
+    sel.disabled = true;
+
+    document.getElementById('modalOverlay').classList.add('show');
+};
+
+document.getElementById('btnCancelar').addEventListener('click', () =>
+    document.getElementById('modalOverlay').classList.remove('show'));
+
+// ── Guardar ────────────────────────────────────────────
+document.getElementById('btnGuardar').addEventListener('click', async () => {
+    const id_usuario  = document.getElementById('inUsuario').value;
+    const hora        = document.getElementById('inHora').value;
+    const descripcion = document.getElementById('inDesc').value.trim();
+
+    if (!hora || !descripcion) { toast('Completa todos los campos'); return; }
+
+    let res;
+    if (editId) {
+        res = await fetch(`/api/tareas/${editId}`, {
+            method:'PUT', credentials:'include',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ hora, descripcion })
+        });
+    } else {
+        res = await fetch('/api/tareas', {
+            method:'POST', credentials:'include',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ id_usuario, fecha: fechaActual, hora, descripcion })
+        });
+    }
+
+    const data = await res.json();
+    if (data.ok) {
+        document.getElementById('modalOverlay').classList.remove('show');
+        toast(editId ? 'Tarea actualizada' : 'Tarea creada');
+        cargarTareas();
+    } else {
+        toast(data.msg || 'Error al guardar');
+    }
+});
+
+// ── Eliminar ───────────────────────────────────────────
+window.eliminarTarea = async id => {
+    if (!confirm('¿Eliminar esta tarea?')) return;
+    const res  = await fetch(`/api/tareas/${id}`, { method:'DELETE', credentials:'include' });
+    const data = await res.json();
+    toast(data.ok ? 'Tarea eliminada' : data.msg);
+    if (data.ok) cargarTareas();
+};
+</script>
+</body>
+</html>

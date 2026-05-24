@@ -16,7 +16,7 @@
             <div class="user-name-wrap">
                 <span class="user-name">Admin</span>
                 <div class="user-dropdown" id="userDropdown">
-                    <a href="equipo404.html" class="dropdown-item" aria-label="Cerrar sesión">
+                    <a href="#" id="btnLogout" class="dropdown-item" aria-label="Cerrar sesión">
                         <span class="item-icon">↪</span>
                         <span class="item-text">Cerrar sesión</span>
                     </a>
@@ -35,6 +35,7 @@
                     Horarios
                 </a>
             </li>
+            <li class="nav-item"><a href="tareas-admin.html" class="nav-link"><span class="nav-icon">📋</span>Tareas</a></li>
             <li class="nav-item">
                 <a href="Calendario-admin.html" class="nav-link active">
                     <span class="nav-icon">📅</span>
@@ -698,4 +699,14 @@
     });
 </script>
 </body>
-</html>
+</html><script>
+document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('btnLogout');
+    if (btn) btn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        await fetch('/api/logout', { method:'POST', credentials:'include' });
+        sessionStorage.clear();
+        window.location.href = 'equipo404.html';
+    });
+});
+</script>

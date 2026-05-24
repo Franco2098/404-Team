@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles2.css">
+    <title>Admin - Horarios</title> 
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">📅 MySchedule</div>
+        <div class="user-info" id="userMenuToggle">
+            <div class="avatar">Ad</div>
+            <div class="user-name-wrap">
+                <span class="user-name">Admin</span>
+                <div class="user-dropdown" id="userDropdown">
+                    <a href="#" id="btnLogout" class="dropdown-item">
+                        <span class="item-icon">↪</span>
+                        <span class="item-text">Cerrar sesión</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav-container">
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="home_admin.html"       class="nav-link active"><span class="nav-icon">🕐</span>Horarios</a></li>
+            <li class="nav-item"><a href="tareas-admin.html" class="nav-link"><span class="nav-icon">📋</span>Tareas</a></li>
+            <li class="nav-item"><a href="Calendario-admin.html" class="nav-link"><span class="nav-icon">📅</span>Calendario</a></li>
+            <li class="nav-item"><a href="recompensa-admin.html" class="nav-link"><span class="nav-icon">🏆</span>Recompensas</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <h2 class="section-title">Horarios – Panel Admin</h2>
+        <div class="admin-toolbar">
+            <button class="btn-primary" id="btnNuevo">+ Nuevo horario</button>
+        </div>
+        <div class="schedule-container" id="scheduleContainer">
+            <p style="color:white">Cargando…</p>
+        </div>
+    </main>
+
+    <!-- Modal crear/editar -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3 id="modalTitle">Nuevo horario</h3>
+            <div class="form-group">
+                <label>Empleado</label>
+                <select id="inUsuario"><option value="">Cargando usuarios…</option></select>
+            </div>
+            <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" id="inFecha">
+            </div>
+            <div class="form-group">
+                <label>Hora de entrada</label>
+                <input type="time" id="inEntrada">
+            </div>
+            <div class="form-group">
+                <label>Hora de salida</label>
+                <input type="time" id="inSalida">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="btnCancelar">Cancelar</button>
+                <button class="btn-save"   id="btnGuardar">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    // ── Dropdown / logout ──────────────────────────────
+    const toggle   = document.getElementById("userMenuToggle");
+    const dropdown = document.getElementById("userDropdown");
+    toggle.addEventListener("click", e => { e.stopPropagation(); dropdown.classList.toggle("show"); });
+    document.addEventListener("click", () => dropdown.classList.remove("show"));
+    document.getElementById('btnLogout').addEventListener('click', async e => {
+        e.preventDefault();
+        await fetch('/api/logout', { method:'POST', credentials:'include' });
+        sessionStorage.clear();
+        window.location.href = 'equipo404.html';
+    });
+
+    // ── Toast ──────────────────────────────────────────
+    function toast(msg, ms=2500) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), ms);
+    }
+
+    // ── Cargar usuarios en el select ───────────────────
+    async function cargarUsuariosSelect() {
+        const sel = document.getElementById('inUsuario');
+        const res = await fetch('/api/usuarios', { credentials:'include' });
+        const usuarios = await res.json();
+        sel.innerHTML = '<option value="">— Selecciona empleado —</option>' +
+            usuarios.map(u => `<option value="${u.id_usuario}">${u.nombre}</option>`).join('');
+    }
+
+    // ── Modal ──────────────────────────────────────────
+    let editKey = null; // { fecha, id_usuario } para edición
+
+    function abrirModal(h = null) {
+        editKey = h ? { fecha: h.fecha, id_usuario: h.id_usuario } : null;
+        document.getElementById('modalTitle').textContent = h ? 'Editar horario' : 'Nuevo horario';
+        document.getElementById('inFecha').value     = h ? h.fecha    : '';
+        document.getElementById('inEntrada').value   = h ? h.entrada  : '';
+        document.getElementById('inSalida').value    = h ? h.salida   : '';
+        // Bloquear fecha y usuario al editar (son la clave)
+        document.getElementById('inFecha').disabled    = !!h;
+        document.getElementById('inUsuario').disabled  = !!h;
+        if (h) document.getElementById('inUsuario').value = h.id_usuario;
+        document.getElementById('modalOverlay').classList.add('show');
+    }
+
+    document.getElementById('btnCancelar').addEventListener('click', () =>
+        document.getElementById('modalOverlay').classList.remove('show'));
+
+    document.getElementById('btnNuevo').addEventListener('click', () => abrirModal());
+
+    document.getElementById('btnGuardar').addEventListener('click', async () => {
+        const fecha      = document.getElementById('inFecha').value;
+        const id_usuario = document.getElementById('inUsuario').value;
+        const entrada    = document.getElementById('inEntrada').value;
+        const salida     = document.getElementById('inSalida').value;
+
+        if (!fecha || !id_usuario || !entrada || !salida) {
+            toast('Completa todos los campos'); return;
+        }
+
+        const url    = editKey ? `/api/horarios/${editKey.fecha}` : '/api/horarios';
+        const method = editKey ? 'PUT' : 'POST';
+        const res    = await fetch(url, {
+            method, credentials:'include',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ fecha, id_usuario, entrada, salida })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            document.getElementById('modalOverlay').classList.remove('show');
+            toast(editKey ? 'Horario actualizado' : 'Horario creado');
+            cargar();
+        } else {
+            toast(data.msg || 'Error al guardar');
+        }
+    });
+
+    // ── Render horarios ────────────────────────────────
+    const DIAS  = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+    function fmt(f) { const d=new Date(f+'T00:00:00'); return `${d.getDate()} ${MESES[d.getMonth()]}`; }
+    function dia(f) { const d=new Date(f+'T00:00:00'); return DIAS[(d.getDay()+6)%7]; }
+
+    async function cargar() {
+        const c = document.getElementById('scheduleContainer');
+        const res   = await fetch('/api/horarios', { credentials:'include' });
+        const datos = await res.json();
+        if (!datos.length) { c.innerHTML='<p style="color:white">Sin horarios registrados.</p>'; return; }
+
+        c.innerHTML = datos.map(h => `
+            <div class="day-card">
+                <div class="day-header">
+                    <span class="day-name">${dia(h.fecha)}</span>
+                    <span class="day-date">${fmt(h.fecha)}</span>
+                </div>
+                <div class="user-badge">👤 ${h.nombre}</div>
+                <div class="schedule-list">
+                    <div class="schedule-item">
+                        <span class="time">🟢 ${h.entrada}</span>
+                        <span class="activity">Entrada</span>
+                    </div>
+                    <div class="schedule-item">
+                        <span class="time">🔴 ${h.salida}</span>
+                        <span class="activity">Salida</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit"   onclick='editarH(${JSON.stringify(h)})'>Editar</button>
+                    <button class="btn-delete" onclick="eliminarH('${h.fecha}', ${h.id_usuario})">Eliminar</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    window.editarH   = h => abrirModal(h);
+    window.eliminarH = async (fecha, uid) => {
+        if (!confirm(`¿Eliminar horario del ${fecha}?`)) return;
+        const res  = await fetch(`/api/horarios/${fecha}`, {
+            method:'DELETE', credentials:'include',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ id_usuario: uid })
+        });
+        const data = await res.json();
+        toast(data.ok ? 'Horario eliminado' : data.msg);
+        if (data.ok) cargar();
+    };
+
+    // Inicializar
+    cargarUsuariosSelect();
+    cargar();
+    </script>
+</body>
+</html>

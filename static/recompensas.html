@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Recompensas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles2.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="logo">📅 MySchedule</div>
+    <div class="user-info" id="userMenuToggle">
+        <div class="avatar" id="avatarEl">JD</div>
+        <div class="user-name-wrap">
+            <span class="user-name" id="nombreEl">Cargando…</span>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="#" id="btnLogout" class="dropdown-item">
+                    <span class="item-icon">↪</span>
+                    <span class="item-text">Cerrar sesión</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<nav class="nav-container">
+    <ul class="nav-menu">
+        <li class="nav-item"><a href="mapa.html"        class="nav-link"><span class="nav-icon">🗺️</span>Mapa</a></li>
+        <li class="nav-item"><a href="home.html"        class="nav-link"><span class="nav-icon">🕐</span>Horarios</a></li>
+        <li class="nav-item"><a href="Calendario.html"  class="nav-link"><span class="nav-icon">📅</span>Calendario</a></li>
+        <li class="nav-item"><a href="recompensas.html" class="nav-link active"><span class="nav-icon">🏆</span>Recompensas</a></li>
+    </ul>
+</nav>
+
+<main class="main-content">
+    <h2 class="section-title">Sistema de Recompensas</h2>
+    <div class="rewards-container" id="rewardsContainer">
+        <p style="color:white">Cargando recompensas…</p>
+    </div>
+</main>
+
+<script>
+const nombre = sessionStorage.getItem('nombre') || 'Usuario';
+document.getElementById('nombreEl').textContent = nombre;
+document.getElementById('avatarEl').textContent  = nombre.slice(0,2).toUpperCase();
+
+const toggle   = document.getElementById("userMenuToggle");
+const dropdown = document.getElementById("userDropdown");
+toggle.addEventListener("click", e => { e.stopPropagation(); dropdown.classList.toggle("show"); });
+document.addEventListener("click", () => dropdown.classList.remove("show"));
+document.getElementById('btnLogout').addEventListener('click', async e => {
+    e.preventDefault();
+    await fetch('/api/logout', { method:'POST', credentials:'include' });
+    sessionStorage.clear();
+    window.location.href = 'equipo404.html';
+});
+
+const ICONOS = ['🎯','🏅','🎁','⭐','🎖️','🥇'];
+
+async function cargar() {
+    const c = document.getElementById('rewardsContainer');
+    try {
+        const res   = await fetch('/api/recompensas', { credentials:'include' });
+        const datos = await res.json();
+
+        if (!datos.length) {
+            c.innerHTML = '<p style="color:white;padding:20px">No hay recompensas disponibles.</p>';
+            return;
+        }
+
+        c.innerHTML = datos.map((r, i) => `
+            <div class="reward-card">
+                <h3>${ICONOS[i % ICONOS.length]} ${r.descripcion}</h3>
+                <p>Puntos requeridos: <strong>${r.puntos_requeridos}</strong></p>
+                <button onclick="alert('Función de canje próximamente disponible')">Canjear</button>
+            </div>
+        `).join('');
+    } catch (err) {
+        c.innerHTML = '<p style="color:#ffdddd;padding:20px">Error al cargar recompensas.</p>';
+    }
+}
+
+cargar();
+</script>
+</body>
+</html>

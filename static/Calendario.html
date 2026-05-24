@@ -16,7 +16,7 @@
             <div class="user-name-wrap">
                 <span class="user-name">Juan Pérez</span>
                 <div class="user-dropdown" id="userDropdown">
-                    <a href="equipo404.html" class="dropdown-item" aria-label="Cerrar sesión">
+                    <a href="#" id="btnLogout" class="dropdown-item" aria-label="Cerrar sesión">
                         <span class="item-icon">↪</span>
                         <span class="item-text">Cerrar sesión</span>
                     </a>
@@ -704,4 +704,22 @@
     });
 </script>
 </body>
-</html>
+</html><script>
+// Patch logout para Calendario
+document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('btnLogout');
+    if (btn) btn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        await fetch('/api/logout', { method:'POST', credentials:'include' });
+        sessionStorage.clear();
+        window.location.href = 'equipo404.html';
+    });
+    var nombre = sessionStorage.getItem('nombre');
+    if (nombre) {
+        var n = document.querySelector('.user-name');
+        var a = document.querySelector('.avatar');
+        if (n) n.textContent = nombre;
+        if (a) a.textContent = nombre.slice(0,2).toUpperCase();
+    }
+});
+</script>

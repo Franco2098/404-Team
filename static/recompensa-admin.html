@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Recompensas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles2.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="logo">📅 MySchedule</div>
+    <div class="user-info" id="userMenuToggle">
+        <div class="avatar">Ad</div>
+        <div class="user-name-wrap">
+            <span class="user-name">Admin</span>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="#" id="btnLogout" class="dropdown-item">
+                    <span class="item-icon">↪</span>
+                    <span class="item-text">Cerrar sesión</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<nav class="nav-container">
+    <ul class="nav-menu">
+        <li class="nav-item"><a href="home_admin.html"       class="nav-link"><span class="nav-icon">🕐</span>Horarios</a></li>
+        <li class="nav-item"><a href="tareas-admin.html" class="nav-link"><span class="nav-icon">📋</span>Tareas</a></li>
+        <li class="nav-item"><a href="Calendario-admin.html" class="nav-link"><span class="nav-icon">📅</span>Calendario</a></li>
+        <li class="nav-item"><a href="recompensa-admin.html" class="nav-link active"><span class="nav-icon">🏆</span>Recompensas</a></li>
+    </ul>
+</nav>
+
+<main class="main-content">
+    <h2 class="section-title">Recompensas – Panel Admin</h2>
+    <div class="admin-toolbar">
+        <button class="btn-primary" id="btnNuevo">+ Nueva recompensa</button>
+    </div>
+    <div class="rewards-container" id="rewardsContainer">
+        <p style="color:white">Cargando…</p>
+    </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h3 id="modalTitle">Nueva recompensa</h3>
+        <div class="form-group">
+            <label>Descripción</label>
+            <textarea id="inDesc" rows="3" placeholder="Descripción de la recompensa…"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Puntos requeridos</label>
+            <input type="number" id="inPuntos" min="1" placeholder="Ej: 100">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" id="btnCancelar">Cancelar</button>
+            <button class="btn-save"   id="btnGuardar">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Dropdown / logout ──────────────────────────────────
+const toggle   = document.getElementById("userMenuToggle");
+const dropdown = document.getElementById("userDropdown");
+toggle.addEventListener("click", e => { e.stopPropagation(); dropdown.classList.toggle("show"); });
+document.addEventListener("click", () => dropdown.classList.remove("show"));
+document.getElementById('btnLogout').addEventListener('click', async e => {
+    e.preventDefault();
+    await fetch('/api/logout', { method:'POST', credentials:'include' });
+    sessionStorage.clear();
+    window.location.href = 'equipo404.html';
+});
+
+// ── Toast ──────────────────────────────────────────────
+function toast(msg, ms=2500) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), ms);
+}
+
+// ── Modal ──────────────────────────────────────────────
+let editId = null;
+const ICONOS = ['🎯','🏅','🎁','⭐','🎖️','🥇'];
+
+function abrirModal(r = null) {
+    editId = r ? r.id_recompensa : null;
+    document.getElementById('modalTitle').textContent = r ? 'Editar recompensa' : 'Nueva recompensa';
+    document.getElementById('inDesc').value   = r ? r.descripcion        : '';
+    document.getElementById('inPuntos').value = r ? r.puntos_requeridos  : '';
+    document.getElementById('modalOverlay').classList.add('show');
+}
+
+document.getElementById('btnCancelar').addEventListener('click', () =>
+    document.getElementById('modalOverlay').classList.remove('show'));
+
+document.getElementById('btnNuevo').addEventListener('click', () => abrirModal());
+
+document.getElementById('btnGuardar').addEventListener('click', async () => {
+    const descripcion       = document.getElementById('inDesc').value.trim();
+    const puntos_requeridos = parseInt(document.getElementById('inPuntos').value);
+
+    if (!descripcion || !puntos_requeridos) { toast('Completa todos los campos'); return; }
+
+    const url    = editId ? `/api/recompensas/${editId}` : '/api/recompensas';
+    const method = editId ? 'PUT' : 'POST';
+    const res    = await fetch(url, {
+        method, credentials:'include',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ descripcion, puntos_requeridos })
+    });
+    const data = await res.json();
+    if (data.ok) {
+        document.getElementById('modalOverlay').classList.remove('show');
+        toast(editId ? 'Recompensa actualizada' : 'Recompensa creada');
+        cargar();
+    } else { toast(data.msg || 'Error al guardar'); }
+});
+
+// ── Render ─────────────────────────────────────────────
+async function cargar() {
+    const c = document.getElementById('rewardsContainer');
+    const res   = await fetch('/api/recompensas', { credentials:'include' });
+    const datos = await res.json();
+
+    if (!datos.length) { c.innerHTML='<p style="color:white">Sin recompensas.</p>'; return; }
+
+    c.innerHTML = datos.map((r, i) => `
+        <div class="reward-card">
+            <h3>${ICONOS[i % ICONOS.length]} ${r.descripcion}</h3>
+            <p>Puntos: <strong>${r.puntos_requeridos}</strong></p>
+            <div class="reward-actions">
+                <button class="btn-edit"   onclick='editarR(${JSON.stringify(r)})'>Editar</button>
+                <button class="btn-delete" onclick="eliminarR(${r.id_recompensa})">Eliminar</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+window.editarR   = r => abrirModal(r);
+window.eliminarR = async id => {
+    if (!confirm('¿Eliminar esta recompensa?')) return;
+    const res  = await fetch(`/api/recompensas/${id}`, { method:'DELETE', credentials:'include' });
+    const data = await res.json();
+    toast(data.ok ? 'Eliminada' : data.msg);
+    if (data.ok) cargar();
+};
+
+cargar();
+</script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles2.css">
+    <title>Dashboard - Horarios Semanales</title>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo">📅 MySchedule</div>
+
+         <div style="display:flex; align-items:center; gap:8px;">
+            <!-- BOTÓN FICHAJE -->
+            <div class="fichar-wrap">
+                <button class="btn-fichar entrada" id="btnFichar">🟢 Fichar entrada</button>
+                <span class="fichar-hora" id="fichajeHora"></span>
+            </div>
+
+        <!-- MENÚ USUARIO -->
+        <div class="user-info" id="userMenuToggle">
+            <div class="avatar" id="avatarEl">JD</div>
+            <div class="user-name-wrap">
+                <span class="user-name" id="nombreEl">Cargando…</span>
+                <div class="user-dropdown" id="userDropdown">
+                    <a href="#" id="btnLogout" class="dropdown-item" aria-label="Cerrar sesión">
+                        <span class="item-icon">↪</span>
+                        <span class="item-text">Cerrar sesión</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAV -->
+    <nav class="nav-container">
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="mapa.html"        class="nav-link"><span class="nav-icon">🗺️</span>Mapa</a></li>
+            <li class="nav-item"><a href="home.html"        class="nav-link active"><span class="nav-icon">🕐</span>Horarios</a></li>
+            <li class="nav-item"><a href="Calendario.html"  class="nav-link"><span class="nav-icon">📅</span>Calendario</a></li>
+            <li class="nav-item"><a href="recompensas.html" class="nav-link"><span class="nav-icon">🏆</span>Recompensas</a></li>
+        </ul>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="main-content">
+        <h2 class="section-title">Semana Laboral</h2>
+        <div class="schedule-container" id="scheduleContainer">
+            <p style="color:white">Cargando horarios…</p>
+        </div>
+    </main>
+
+    <script>
+    // ── Auth check ─────────────────────────────────────
+    const nombre = sessionStorage.getItem('nombre') || 'Usuario';
+    document.getElementById('nombreEl').textContent = nombre;
+    document.getElementById('avatarEl').textContent  = nombre.slice(0,2).toUpperCase();
+
+    // ── Dropdown ───────────────────────────────────────
+    const toggle   = document.getElementById("userMenuToggle");
+    const dropdown = document.getElementById("userDropdown");
+    toggle.addEventListener("click", e => { e.stopPropagation(); dropdown.classList.toggle("show"); });
+    document.addEventListener("click", () => dropdown.classList.remove("show"));
+
+    // ── Logout ─────────────────────────────────────────
+    document.getElementById('btnLogout').addEventListener('click', async e => {
+        e.preventDefault();
+        await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+        sessionStorage.clear();
+        window.location.href = 'equipo404.html';
+    });
+
+    // ── FICHAJE ────────────────────────────────────────
+    const btnFichar  = document.getElementById('btnFichar');
+    const fichajeHora = document.getElementById('fichajeHora');
+ 
+    async function cargarEstadoFichaje() {
+        const res  = await fetch('/api/fichaje/estado', { credentials:'include' });
+        const data = await res.json();
+        actualizarBoton(data);
+    }
+ 
+    function actualizarBoton(data) {
+        btnFichar.className = 'btn-fichar';
+        if (data.estado === 'sin_fichar') {
+            btnFichar.classList.add('entrada');
+            btnFichar.textContent = '🟢 Fichar entrada';
+            fichajeHora.textContent = '';
+        } else if (data.estado === 'entrada_fichada') {
+            btnFichar.classList.add('salida');
+            btnFichar.textContent = '🔴 Fichar salida';
+            fichajeHora.textContent = `Entrada: ${data.entrada}`;
+        } else if (data.estado === 'completo') {
+            btnFichar.classList.add('completo');
+            btnFichar.textContent = '✅ Jornada completada';
+            fichajeHora.textContent = `${data.entrada} → ${data.salida}`;
+        }
+    }
+ 
+    btnFichar.addEventListener('click', async () => {
+        if (btnFichar.classList.contains('completo')) return;
+ 
+        const esEntrada = btnFichar.classList.contains('entrada');
+        const endpoint  = esEntrada ? '/api/fichaje/entrada' : '/api/fichaje/salida';
+ 
+        btnFichar.disabled = true;
+        const res  = await fetch(endpoint, { method:'POST', credentials:'include' });
+        const data = await res.json();
+        btnFichar.disabled = false;
+ 
+        if (data.ok) {
+            cargarEstadoFichaje();
+        } else {
+            alert(data.msg || 'Error al fichar');
+        }
+    });
+
+    // ── Cargar horarios desde la API ───────────────────
+    const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+    function formatFecha(fechaStr) {
+        const d = new Date(fechaStr + 'T00:00:00');
+        return `${d.getDate()} ${MESES[d.getMonth()]}`;
+    }
+
+    function diaSemana(fechaStr) {
+        const d = new Date(fechaStr + 'T00:00:00');
+        return DIAS[(d.getDay() + 6) % 7]; // lunes=0
+    }
+
+    async function cargarHorarios() {
+    const container = document.getElementById('scheduleContainer');
+    try {
+        const res   = await fetch('/api/horarios', { credentials:'include' });
+        const datos = await res.json();
+
+        if (!datos.length) {
+            container.innerHTML = '<p style="color:white;padding:20px">No hay horarios registrados.</p>';
+            return;
+        }
+
+        // Cargar tareas de cada día en paralelo
+        const tareasPromesas = datos.map(h =>
+            fetch(`/api/tareas?fecha=${h.fecha}`, { credentials:'include' })
+                .then(r => r.json())
+                .catch(() => [])
+        );
+        const todasTareas = await Promise.all(tareasPromesas);
+
+        container.innerHTML = datos.map((h, i) => {
+            const tareas = todasTareas[i];
+            const tareasHTML = tareas.length
+                ? tareas.map(t => `
+                    <div class="schedule-item">
+                        <span class="time">${t.hora}</span>
+                        <span class="activity">${t.descripcion}</span>
+                    </div>`).join('')
+                : '<p style="font-size:13px;color:#5e6c84;padding:8px 0">Sin tareas</p>';
+
+            return `
+                <div class="day-card">
+                    <div class="day-header">
+                        <span class="day-name">${diaSemana(h.fecha)}</span>
+                        <span class="day-date">${formatFecha(h.fecha)}</span>
+                    </div>
+                    <div style="font-size:13px;font-weight:600;color:#667eea;margin-bottom:8px;">👤 ${h.nombre}</div>
+                    <div class="schedule-list">${tareasHTML}</div>
+                </div>`;
+        }).join('');
+
+    } catch (err) {
+        container.innerHTML = '<p style="color:#ffdddd;padding:20px">Error al cargar horarios.</p>';
+    }
+}
+
+    cargarHorarios();
+    </script>
+</body>
+</html>

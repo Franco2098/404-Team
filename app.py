@@ -10,13 +10,14 @@ CORS(app, supports_credentials=True)
 
 # ─────────────────────────────────────────────
 #  CONFIGURACIÓN DE BASE DE DATOS
-#  MariaDB en localhost, root sin contraseña
+#  MariaDB en localhost, root 
 # ─────────────────────────────────────────────
 DB_CONFIG = {
     'host':     os.getenv('DB_HOST', 'localhost'),
     'user':     os.getenv('DB_USER', 'root'),
-    'password': os.getenv('DB_PASSWORD', 'root'),   # sin contraseña
+    'password': os.getenv('DB_PASSWORD', 'root'),   
     'database': os.getenv('DB_NAME', 'Vifraison'),
+    'port':     int(os.getenv('DB_PORT', 3306)),
     'charset':  'utf8mb4',
     'cursorclass': pymysql.cursors.DictCursor
 }

@@ -3,7 +3,7 @@
 ## Requisitos previos
 - Python 3.10 o superior → https://www.python.org/downloads/
   (Durante la instalación marca "Add Python to PATH")
-- MariaDB o MySQL instalado y corriendo en local
+- MariaDB o MySQL instalado y corriendo en local → https://mariadb.org/download/?t=mariadb&p=mariadb&r=12.2.2&os=windows&cpu=x86_64&pkg=msi&mirror=raiolanetworks
 - Git → https://git-scm.com/downloads
 
 ## 1. Clonar el repositorio
@@ -32,6 +32,7 @@ Abre app.py y edita estas líneas si tu configuración es diferente:
         'user':     'root',
         'password': '',       # ← pon tu contraseña si tienes una
         'database': 'Vifraison',
+        'port': '3306',
     }
 
 ## 5. Arrancar el servidor
